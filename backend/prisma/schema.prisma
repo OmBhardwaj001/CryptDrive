@@ -13,3 +13,27 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  USER
+  ADMIN
+  GUEST
+}
+
+model User {
+  id                     String    @id @default(cuid())
+  username               String
+  email                  String    @unique
+  password               String
+  role                   Role      @default(USER)
+  avatarURL              String    @default("https://via.placeholder.com/200x200.png")
+  avatarLocalPath        String
+  failedLoginAttempts    Int       @default(0)
+  accountLockedTill      DateTime?
+  isVerified             Boolean   @default(false)
+  emailVerificationToken String?
+  passwordResetToken     String?
+  passwordResetExpiry    String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @default(now())
+}
