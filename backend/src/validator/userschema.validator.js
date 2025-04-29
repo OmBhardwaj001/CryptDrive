@@ -34,3 +34,5 @@ const userSchema = z.object({
 
   role: z.nativeEnum(roleEnum),
 });
+
+export {userSchema};
