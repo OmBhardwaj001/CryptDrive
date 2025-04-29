@@ -24,7 +24,7 @@ function generateTemporaryToken() {
     .update(unhashedToken)
     .digest("hex");
 
-  const tokenexpiry = Date.now() + 20 * 60 * 1000;
+  const tokenexpiry = new Date(Date.now() + 20 * 60 * 1000); //Converts that future timestamp into a full JavaScript Date object, which Prisma accepts for DateTime fields.
 
   return { unhashedToken, hashedToken, tokenexpiry };
 }
