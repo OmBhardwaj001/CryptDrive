@@ -11,6 +11,9 @@ import {
 } from "../utils/generateToken,js";
 import sendMail from "../utils/mail.js";
 import { Prisma, PrismaClient } from "../../generated/prisma";
+import { createParam } from "../../generated/prisma/runtime/library.js";
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -73,7 +76,7 @@ const verifyUser = asyncHandler(async (req, res) => {
 
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-  const user = await prisma.user.findUnique({
+  const user = await prisma.user.findFirst({
     where: {
       emailVerificationToken: hashedToken,
       emailVerificationTokenExpiry: { gt: new Date() },
@@ -89,8 +92,8 @@ const verifyUser = asyncHandler(async (req, res) => {
       id: user.id,
     },
     data: {
-      emailVerificationToken: undefined,
-      emailVerificationTokenExpiry: undefined,
+      emailVerificationToken: null,
+      emailVerificationTokenExpiry: null,
       isVerified: true,
     },
   });
@@ -165,10 +168,121 @@ const logout = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "user logged out successfully"));
 });
 
-const resendVerificationEmail = asyncHandler(async (req, res) => {});
+const resendVerificationEmail = asyncHandler(async (req, res) => {
+  const { email } = req.body;
 
-const forgotPassword = asyncHandler(async (req, res) => {});
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+  });
 
-const resetPassword = asyncHandler(async (req, res) => {});
+  if (!user) {
+    throw new ApiError(400, "email not registerd");
+  }
 
-export { registerUser, verifyUser, login, logout, getProfile };
+  const { unHashedToken, hashedToken, tokenExpiry } = generateTemporaryToken();
+
+  await prisma.user.update({
+    where: {
+      email: user.email,
+    },
+    data: {
+      emailVerificationToken: hashedToken,
+      emailVerificationTokenExpiry: tokenExpiry,
+    },
+  });
+
+  await sendMail({
+    username: user.username,
+    email: user.email,
+    url: `${process.env.BASE_URL}/api/v1/auth/verify/${unHashedToken}`,
+    subject: "Email verification",
+    mailType: "verify",
+  });
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, `email sent successfully to ${user.email}`));
+});
+
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(400, "invalid email");
+  }
+
+  const { unHashedToken, hashedToken, tokenExpiry } = generateTemporaryToken();
+
+  await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      passwordResetToken: hashedToken,
+      passwordResetExpiry: tokenExpiry,
+    },
+  });
+
+  await sendMail({
+    username: user.username,
+    email: user.email,
+    url: `${process.env.BASE_URL}/api/v1/auth/reset/${unHashedToken}`,
+    subject: "Email verification",
+    mailType: "reset",
+  });
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, `password reset email sent to ${user.email}`));
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+  const { email, password } = req.body;
+
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  const user = await prisma.user.findFirst({
+    where: {
+      email: email,
+      passwordResetToken: hashedToken,
+      passwordResetExpiry: { gt: new Date() },
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(400, "invalid token user not found");
+  }
+
+  await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      password: password,
+      passwordResetExpiry: null,
+      passwordResetToken: null,
+    },
+  });
+
+  res.status(200).json(new ApiResponse(200, "password reset successful"));
+});
+
+export {
+  registerUser,
+  verifyUser,
+  login,
+  logout,
+  getProfile,
+  resendVerificationEmail,
+  forgotPassword,
+  resetPassword,
+};
