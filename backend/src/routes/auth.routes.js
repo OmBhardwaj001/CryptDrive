@@ -8,12 +8,15 @@ import {
   resendVerificationEmail,
   forgotPassword,
   resetPassword,
+  changeCurrentPassword,
+  refreshToken,
 } from "../controller/auth.controller.js";
 import {
   validateRegisterUser,
   validateLoginuser,
   validateEmail,
   validatepasswordreset,
+  validatecurrentpassword,
 } from "../middlewares/validate.middleware.js";
 import { Isloggedin } from "../middlewares/auth.middleware.js";
 
@@ -29,3 +32,7 @@ router
   .post(Isloggedin, validateEmail, resendVerificationEmail);
 router.route("/forgotpassword").post(validateEmail, forgotPassword);
 router.route("/reset/:token").post(validatepasswordreset, resetPassword);
+router
+  .route("/changeCurrentpassword")
+  .post(validatecurrentpassword, changeCurrentPassword);
+router.route("/refreshtoken").get(refreshToken);

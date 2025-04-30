@@ -5,39 +5,42 @@ import {
   generateRefreshToken,
 } from "../utils/generateToken.js";
 import dotenv from "dotenv";
+import { Prisma, PrismaClient } from "../../generated/prisma";
+
+const prisma = new PrismaClient();
 
 dotenv.config();
 
 const Isloggedin = async (req, res, next) => {
   try {
     const accessToken = req.cookies?.accessToken;
-    const refreshToken = req.cookies?.refreshToken;
-
     if (!accessToken) {
-      if (!refreshToken) {
-        throw new ApiError(400, "user is not logged in");
-      }
-
-      const refreshdecoded = await jwt.verify(
-        refreshToken,
-        process.env.REFRESH_TOKEN_SECRET,
-      );
-      const newaccessToken = generateAccessToken(refreshdecoded._id);
-
-      res.cookie("accessToken", newaccessToken, {
-        httpOnly: true,
-        secure: true,
-        maxAge: process.env.ACCESS_COOKIE_EXPIRY,
-      });
-
-      req.user = refreshdecoded;
-
-      return next();
-    } else {
-      return next();
+      throw new ApiError(400, "accesstoken not found, user is not logged in");
     }
+
+    const decoded = await jwt.verify(
+      accessToken,
+      process.env.ACCESS_TOKEN_SECRET,
+    );
+    if (!decoded) {
+      throw new ApiError(400, "invalid token");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: decoded._id,
+      },
+    });
+
+    if (!user) {
+      throw new ApiError(400, "user not found");
+    }
+
+    req.user = user;
+
+    next();
   } catch (error) {
-    throw new ApiError(400, "invalid token", error);
+    throw new ApiError(400, "something went wrong", error);
   }
 };
 

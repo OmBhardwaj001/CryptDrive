@@ -3,6 +3,7 @@ import {
   loginSchema,
   emailScehma,
   passwordResetSchema,
+  changecurrentpasswordSchema,
 } from "../validator/userschema.validator.js";
 import { ApiError } from "../utils/api.error.js";
 
@@ -12,7 +13,7 @@ const validateRegisterUser = (req, res, next) => {
     throw new ApiError(
       400,
       "validation error , please provide valid data",
-      result.error.issues.message,
+      result.error.issues[0]?.message,
     );
   }
 
@@ -25,7 +26,7 @@ const validateLoginuser = (req, res, next) => {
     throw new ApiError(
       400,
       "validation error, please provide valid data",
-      result.error.issues.message,
+      result.error.issues[0]?.message,
     );
   }
   next();
@@ -37,7 +38,7 @@ const validateEmail = (req, res, next) => {
     throw new ApiError(
       400,
       "validation error, please provide valid data",
-      result.error.issues.message,
+      result.error.issues[0]?.message,
     );
   }
 
@@ -50,7 +51,18 @@ const validatepasswordreset = (req, res, next) => {
     throw new ApiError(
       400,
       "validation error, please provide valid data",
-      result.error.issues.message,
+      result.error.issues[0]?.message,
+    );
+  }
+  next();
+};
+const validatecurrentpassword = (req, res, next) => {
+  const result = changecurrentpasswordSchema.safeParse(req.body);
+  if (!result.success) {
+    throw new ApiError(
+      400,
+      "validation error, please provide valid data",
+      result.error.issues[0]?.message,
     );
   }
   next();
@@ -61,4 +73,5 @@ export {
   validateLoginuser,
   validateEmail,
   validatepasswordreset,
+  validatecurrentpassword,
 };

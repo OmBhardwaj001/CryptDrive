@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { ApiError } from "../utils/api.error.js";
@@ -276,6 +277,80 @@ const resetPassword = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "password reset successful"));
 });
 
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { email, currentpassword, newpassword, confirmpassword } = req.body;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(400, "user not found");
+  }
+
+  const hashedPassword = crypto
+    .createHash("sha256")
+    .update(currentpassword)
+    .digest("hex");
+
+  if (hashedPassword != user.password) {
+    throw new ApiError(400, "incorrect password");
+  }
+
+  const newpasswordHashed = crypto
+    .createHash("sha256")
+    .update(newpassword)
+    .digest("hex");
+
+  if (newpasswordHashed === hashedPassword) {
+    throw new ApiError(400, "new password must be different from older one");
+  }
+
+  if (newpassword != confirmpassword) {
+    throw new ApiError(400, "New password and confirm password do not match");
+  }
+
+  await prisma.user.update({
+    where: {
+      email: user.email,
+    },
+    data: {
+      password: newpassword,
+    },
+  });
+
+  res.status(200).json(new ApiResponse(200, "password changed successfully"));
+});
+
+const refreshToken = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies?.refreshToken;
+
+  if (!refreshToken) {
+    throw new ApiError(400, "refresh token not found");
+  }
+
+  const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+  if (!decoded) {
+    throw new ApiError(400, "invalid token");
+  }
+
+  const newaccessToken = jwt.sign(
+    { _id: decoded._id },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: ACCESS_TOKEN_EXPIRY },
+  );
+
+  res.cookie("accessToken", newaccessToken, {
+    httpOnly: true,
+    secure: true,
+    maxAge: process.env.ACCESS_COOKIE_EXPIRY,
+  });
+
+  res.status(200).json(new ApiResponse(200, "accesstoken refreshed"));
+});
+
 export {
   registerUser,
   verifyUser,
@@ -285,4 +360,6 @@ export {
   resendVerificationEmail,
   forgotPassword,
   resetPassword,
+  changeCurrentPassword,
+  refreshToken,
 };

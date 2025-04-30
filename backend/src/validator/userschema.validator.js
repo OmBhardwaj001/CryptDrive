@@ -12,52 +12,19 @@ const userSchema = z.object({
     .trim()
     .transform((username) => username.toLocaleLowerCase()),
 
-  email: z
-    .string({
-      required_error: "email is required",
-    })
-    .email({ message: "email is not valid" })
-    .trim(),
+  email: emailSchema,
 
-  password: z
-    .string({
-      required_error: "password is required",
-    })
-    .min(8, { message: "password must be of atleast 8 characters" })
-    .trim()
-    .regex(/[!@#$%^&*]/, {
-      message: "Password must include a special character",
-    })
-    .regex(/[a-z]/, { message: "Password must include a small letter" })
-    .regex(/[A-Z]/, { message: "Password must include a capital letter" })
-    .regex(/\d/, { message: "Password must include a number" }), // [0-9]
+  password: passwordSchema,
 
   role: z.nativeEnum(roleEnum),
 });
 
 const loginSchema = z.object({
-  email: z
-    .string({
-      required_error: "email is required",
-    })
-    .email({ message: "email is not valid" })
-    .trim(),
-
-  password: z
-    .string({
-      required_error: "password is required",
-    })
-    .min(8, { message: "password must be of atleast 8 characters" })
-    .trim()
-    .regex(/[!@#$%^&*]/, {
-      message: "Password must include a special character",
-    })
-    .regex(/[a-z]/, { message: "Password must include a small letter" })
-    .regex(/[A-Z]/, { message: "Password must include a capital letter" })
-    .regex(/\d/, { message: "Password must include a number" }), // [0-9]
+  email: emailSchema,
+  password: passwordSchema,
 });
 
-const emailScehma = z.object({
+const emailSchema = z.object({
   email: z
     .string({
       required_error: "email is required",
@@ -67,13 +34,11 @@ const emailScehma = z.object({
 });
 
 const passwordResetSchema = z.object({
-  email: z
-    .string({
-      required_error: "email is required",
-    })
-    .email({ message: "email is not valid" })
-    .trim(),
+  email: emailSchema,
+  password: passwordSchema,
+});
 
+const passwordSchema = z.object({
   password: z
     .string({
       required_error: "password is required",
@@ -88,4 +53,17 @@ const passwordResetSchema = z.object({
     .regex(/\d/, { message: "Password must include a number" }), // [0-9]
 });
 
-export { userSchema, loginSchema, emailScehma, passwordResetSchema };
+const changecurrentpasswordSchema = z.object({
+  email: emailSchema,
+  currentpassword: passwordSchema,
+  newpassword: passwordSchema,
+  confirmpassword: passwordSchema,
+});
+
+export {
+  userSchema,
+  loginSchema,
+  emailSchema,
+  passwordResetSchema,
+  changecurrentpasswordSchema,
+};
