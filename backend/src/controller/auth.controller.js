@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { ApiError } from "../utils/api.error.js";
 import { ApiResponse } from "../utils/api.response.js";
-import { asyncHandler } from "../utils/Async_handler.js";
+import { asyncHandler } from "../utils/Asynchandler.js";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -12,6 +12,8 @@ import {
 } from "../utils/generateToken.js";
 import sendMail from "../utils/mail.js";
 import User from "../../model/user.model.js";
+
+
 
 dotenv.config();
 
@@ -55,6 +57,9 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, `email sent successfully to ${user.email}`));
 });
 
+// check if user is already verified
+// give seperate msg for invalid token and token is expired
+
 const verifyUser = asyncHandler(async (req, res) => {
   const { token } = req.params;
 
@@ -80,10 +85,13 @@ const verifyUser = asyncHandler(async (req, res) => {
   await user.save();
 
   res.status(200).json(new ApiResponse(200), "user verified");
+
 });
 
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+
+  
 
   const user = db.user.findUnique({
     where: {
@@ -92,31 +100,28 @@ const login = asyncHandler(async (req, res) => {
   });
 
   if (!user) {
-    throw new ApiError(400, "user not found");
+    throw new ApiError(400, "Incorrect email or password");
   }
 
-  const ismatched = bcrypt.compare(password, user.password);
+  const isMatch = await user.isPasswordCorrect(password);
 
-  if (!ismatched) {
-    throw new ApiError(400, "incorrect password");
+  if (!isMatch) {
+    throw new ApiError(400, "Incorrect email or password");
   }
 
-  const refreshToken = generateRefreshToken(user.id);
-  const accessToken = generateAccessToken(user.id);
+  const refreshToken = user.generateRefreshToken();
+  const accessToken = user.generateAccessToken();
 
-  res.cookie("accessToken", accessToken, {
+  const cookieOptions = {
     httpOnly: true,
-    secure: true,
-    maxAge: process.env.ACCESS_COOKIE_EXPIRY,
-  });
+    secure: process.env.NODE_ENV !== "Development",
+  };
 
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: true,
-    maxAge: process.env.REFRESH_COOKIE_EXPIRY,
-  });
-
-  res.status(200).json(new ApiResponse(200, "user is logged in successfully"));
+  res
+    .status(200)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
+    .json(new ApiResponse(200, "User is logged in successfully"));
 });
 
 const getProfile = asyncHandler(async (req, res) => {
