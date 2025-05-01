@@ -88,38 +88,31 @@ const verifyUser = asyncHandler(async (req, res) => {
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = db.user.findUnique({
-    where: {
-      email: email,
-    },
-  });
+  const user = await User.findOne({ email });
 
   if (!user) {
-    throw new ApiError(400, "user not found");
+    throw new ApiError(400, "Incorrect email or password");
   }
 
-  const ismatched = bcrypt.compare(password, user.password);
+  const isMatch = await user.isPasswordCorrect(password);
 
-  if (!ismatched) {
-    throw new ApiError(400, "incorrect password");
+  if (!isMatch) {
+    throw new ApiError(400, "Incorrect email or password");
   }
 
-  const refreshToken = generateRefreshToken(user.id);
-  const accessToken = generateAccessToken(user.id);
+  const refreshToken = user.generateRefreshToken();
+  const accessToken = user.generateAccessToken();
 
-  res.cookie("accessToken", accessToken, {
+  const cookieOptions = {
     httpOnly: true,
-    secure: true,
-    maxAge: process.env.ACCESS_COOKIE_EXPIRY,
-  });
+    secure: process.env.NODE_ENV !== "Development",
+  };
 
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: true,
-    maxAge: process.env.REFRESH_COOKIE_EXPIRY,
-  });
-
-  res.status(200).json(new ApiResponse(200, "user is logged in successfully"));
+  res
+    .status(200)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
+    .json(new ApiResponse(200, "User is logged in successfully"));
 });
 
 const getProfile = asyncHandler(async (req, res) => {
