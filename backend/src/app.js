@@ -19,7 +19,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use((err, _req, res, _next) => {
   const statusCode = err.statusCode ?? 500;
 
-  console.log(err)
+  console.log(err);
 
   res.status(statusCode).json({
     statusCode,
