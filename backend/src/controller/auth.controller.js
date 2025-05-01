@@ -9,17 +9,17 @@ import {
   generateAccessToken,
   generateRefreshToken,
   generateTemporaryToken,
-} from "../utils/generateToken,js";
+} from "../utils/generateToken.js";
 import sendMail from "../utils/mail.js";
-import { Prisma, PrismaClient } from "../../generated/prisma";
-import { createParam } from "../../generated/prisma/runtime/library.js";
+// import { PrismaClient } from "../generated/prisma/index.js";
+
 
 dotenv.config();
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient(); 
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password } = req.body; 
 
   const existinguser = await prisma.user.findUnique({
     where: {

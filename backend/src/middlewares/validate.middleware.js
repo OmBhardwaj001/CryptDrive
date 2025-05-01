@@ -1,7 +1,7 @@
 import {
   userSchema,
   loginSchema,
-  emailScehma,
+  emailSchema,
   passwordResetSchema,
   changecurrentpasswordSchema,
 } from "../validator/userschema.validator.js";
@@ -33,7 +33,7 @@ const validateLoginuser = (req, res, next) => {
 };
 
 const validateEmail = (req, res, next) => {
-  const result = emailScehma.safeParse(req.body);
+  const result = emailSchema.safeParse(req.body);
   if (!result.success) {
     throw new ApiError(
       400,

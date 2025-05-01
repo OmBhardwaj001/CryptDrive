@@ -5,9 +5,7 @@ import {
   generateRefreshToken,
 } from "../utils/generateToken.js";
 import dotenv from "dotenv";
-import { Prisma, PrismaClient } from "../../generated/prisma";
-
-const prisma = new PrismaClient();
+import { db } from "../libs/db.lib.js";
 
 dotenv.config();
 
@@ -26,7 +24,7 @@ const Isloggedin = async (req, res, next) => {
       throw new ApiError(400, "invalid token");
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: {
         id: decoded._id,
       },
