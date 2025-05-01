@@ -55,6 +55,9 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, `email sent successfully to ${user.email}`));
 });
 
+// check if user is already verified
+// give seperate msg for invalid token and token is expired
+
 const verifyUser = asyncHandler(async (req, res) => {
   const { token } = req.params;
 
@@ -79,7 +82,7 @@ const verifyUser = asyncHandler(async (req, res) => {
 
   await user.save();
 
-  res.status(200).json(new ApiResponse(200), "user verified");
+  res.status(200).json(new ApiResponse(200), "User is verified successfully");
 });
 
 const login = asyncHandler(async (req, res) => {
