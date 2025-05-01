@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { decode } from "jsonwebtoken";
 import { ApiError } from "../utils/api.error.js";
 import dotenv from "dotenv";
 import User from "../../model/user.model.js";
@@ -23,15 +23,7 @@ const Isloggedin = async (req, res, next) => {
     if (!decoded) {
       throw new ApiError(400, "invalid token");
     }
-
-    const user = await User.findById(decoded._id);
-
-    if (!user){
-      throw new ApiError(400, "user not found");
-    }
-
-    req.user = user;
-
+    req.user = decoded;
     next();
   } catch (error) {
     throw new ApiError(400, "something went wrong", error);
