@@ -1,7 +1,6 @@
-import {Prisma, PrismaClient } from "../../generated/prisma/index.js";
+import { Prisma, PrismaClient } from "../../generated/prisma/index.js";
 import bcrypt from "bcryptjs";
 export const db = new PrismaClient();
-
 
 const passowrdHashEXT = Prisma.defineExtension({
   name: "PasswordHash",
