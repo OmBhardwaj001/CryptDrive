@@ -11,7 +11,7 @@ import {
   generateTemporaryToken,
 } from "../utils/generateToken.js";
 import sendMail from "../utils/mail.js";
-import User from "../../model/user.model.js";
+import User from "../model/user.model.js";
 
 dotenv.config();
 
