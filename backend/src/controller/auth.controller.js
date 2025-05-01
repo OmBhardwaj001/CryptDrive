@@ -11,17 +11,16 @@ import {
   generateTemporaryToken,
 } from "../utils/generateToken.js";
 import sendMail from "../utils/mail.js";
-// import { PrismaClient } from "../generated/prisma/index.js";
+import { db } from "../libs/db.lib.js";
 
 
 dotenv.config();
 
-// const prisma = new PrismaClient(); 
 
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body; 
 
-  const existinguser = await prisma.user.findUnique({
+  const existinguser = await db.user.findUnique({
     where: {
       email: email,
     },
@@ -31,7 +30,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "user already registered");
   }
 
-  const newUser = await prisma.user.create({
+  const newUser = await db.user.create({
     data: {
       username: username,
       email: email,
@@ -45,7 +44,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const { unHashedToken, hashedToken, tokenExpiry } = generateTemporaryToken();
 
-  await prisma.user.update({
+  await db.user.update({
     where: {
       id: newUser.id,
     },
@@ -77,7 +76,7 @@ const verifyUser = asyncHandler(async (req, res) => {
 
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-  const user = await prisma.user.findFirst({
+  const user = await db.user.findFirst({
     where: {
       emailVerificationToken: hashedToken,
       emailVerificationTokenExpiry: { gt: new Date() },
@@ -88,7 +87,7 @@ const verifyUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "invalid token");
   }
 
-  await prisma.user.update({
+  await db.user.update({
     where: {
       id: user.id,
     },
@@ -105,7 +104,7 @@ const verifyUser = asyncHandler(async (req, res) => {
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = prisma.user.findUnique({
+  const user = db.user.findUnique({
     where: {
       email: email,
     },
@@ -140,7 +139,7 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const getProfile = asyncHandler(async (req, res) => {
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: {
       id: Number(req.user._id),
     },
@@ -172,7 +171,7 @@ const logout = asyncHandler(async (req, res) => {
 const resendVerificationEmail = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: {
       email: email,
     },
@@ -184,7 +183,7 @@ const resendVerificationEmail = asyncHandler(async (req, res) => {
 
   const { unHashedToken, hashedToken, tokenExpiry } = generateTemporaryToken();
 
-  await prisma.user.update({
+  await db.user.update({
     where: {
       email: user.email,
     },
@@ -210,7 +209,7 @@ const resendVerificationEmail = asyncHandler(async (req, res) => {
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: {
       email: email,
     },
@@ -222,7 +221,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   const { unHashedToken, hashedToken, tokenExpiry } = generateTemporaryToken();
 
-  await prisma.user.update({
+  await db.user.update({
     where: {
       id: user.id,
     },
@@ -251,7 +250,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-  const user = await prisma.user.findFirst({
+  const user = await db.user.findFirst({
     where: {
       email: email,
       passwordResetToken: hashedToken,
@@ -263,7 +262,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, "invalid token user not found");
   }
 
-  await prisma.user.update({
+  await db.user.update({
     where: {
       id: user.id,
     },
@@ -280,7 +279,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { email, currentpassword, newpassword, confirmpassword } = req.body;
 
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: {
       email: email,
     },
@@ -312,7 +311,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, "New password and confirm password do not match");
   }
 
-  await prisma.user.update({
+  await db.user.update({
     where: {
       email: user.email,
     },

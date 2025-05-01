@@ -1,9 +1,5 @@
 import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/api.error.js";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../utils/generateToken.js";
 import dotenv from "dotenv";
 import { db } from "../libs/db.lib.js";
 

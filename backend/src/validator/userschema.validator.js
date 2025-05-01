@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-const roleEnum = z.enum(["admin", "user", "guest"]);
 
 const emailSchema = z.object({
   email: z
@@ -36,18 +35,34 @@ const userSchema = z.object({
     .trim()
     .transform((username) => username.toLocaleLowerCase()),
 
-  email: emailSchema,
+  email: z
+    .string({
+      required_error: "email is required",
+    })
+    .email({ message: "email is not valid" })
+    .trim(),
 
-  password: passwordSchema,
+  password: z
+    .string({
+      required_error: "password is required",
+    })
+    .min(8, { message: "password must be of atleast 8 characters" })
+    .trim()
+    .regex(/[!@#$%^&*]/, {
+      message: "Password must include a special character",
+    })
+    .regex(/[a-z]/, { message: "Password must include a small letter" })
+    .regex(/[A-Z]/, { message: "Password must include a capital letter" })
+    .regex(/\d/, { message: "Password must include a number" }), // [0-9] ,
 
-  role: z.nativeEnum(roleEnum),
-});
+}).strict();
 
 const loginSchema = z.object({
-  email: z.string({
-    required_error:"email is required",
-  })
-  .email({ message: "email is not valid" })
+  email: z
+    .string({
+      required_error: "email is required",
+    })
+    .email({ message: "email is not valid" })
     .trim(),
   password: z
     .string({
@@ -61,23 +76,19 @@ const loginSchema = z.object({
     .regex(/[a-z]/, { message: "Password must include a small letter" })
     .regex(/[A-Z]/, { message: "Password must include a capital letter" })
     .regex(/\d/, { message: "Password must include a number" }), // [0-9] ,
-});
-
-
+}).strict();
 
 const passwordResetSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
-});
-
-
+}).strict();
 
 const changecurrentpasswordSchema = z.object({
-  email: emailSchema,
   currentpassword: passwordSchema,
   newpassword: passwordSchema,
   confirmpassword: passwordSchema,
-});
+}).strict();
+
 
 export {
   userSchema,
