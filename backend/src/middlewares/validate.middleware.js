@@ -56,6 +56,7 @@ const validatepasswordreset = (req, res, next) => {
   }
   next();
 };
+
 const validatecurrentpassword = (req, res, next) => {
   const result = changecurrentpasswordSchema.safeParse(req.body);
   if (!result.success) {
