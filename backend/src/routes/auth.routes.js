@@ -2,14 +2,14 @@ import { Router } from "express";
 import {
   registerUser,
   verifyUser,
-  login,
-  logout,
-  getProfile,
-  resendVerificationEmail,
-  forgotPassword,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  userProfile,
+  resendEmailVerification,
+  forgotPasswordReq,
   resetPassword,
   changeCurrentPassword,
-  refreshToken,
 } from "../controller/auth.controller.js";
 import {
   validateRegisterUser,
@@ -24,17 +24,17 @@ const router = Router();
 
 router.route("/register").post(validateRegisterUser, registerUser);
 router.route("/verify/:token").get(verifyUser);
-router.route("/login").post(validateLoginuser, login);
-router.route("/logout").get(Isloggedin, logout);
-router.route("/profile").get(Isloggedin, getProfile);
+router.route("/login").post(validateLoginuser, loginUser);
+router.route("/logout").get(Isloggedin, logoutUser);
+router.route("/profile").get(Isloggedin, userProfile);
 router
   .route("/resend")
-  .post(Isloggedin, validateEmail, resendVerificationEmail);
-router.route("/forgotpassword").post(validateEmail, forgotPassword);
+  .post(Isloggedin, validateEmail, resendEmailVerification);
+router.route("/forgotpassword").post(validateEmail, forgotPasswordReq);
 router.route("/reset/:token").post(validatepasswordreset, resetPassword);
 router
   .route("/changeCurrentpassword")
   .post(validatecurrentpassword, changeCurrentPassword);
-router.route("/refreshtoken").get(refreshToken);
+router.route("/refreshtoken").get(refreshAccessToken);
 
 export default router;

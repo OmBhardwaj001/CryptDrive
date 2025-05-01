@@ -2,8 +2,8 @@ import {
   userSchema,
   loginSchema,
   emailSchema,
-  passwordResetSchema,
   changecurrentpasswordSchema,
+  passwordSchema,
 } from "../validator/userschema.validator.js";
 import { ApiError } from "../utils/api.error.js";
 
@@ -46,7 +46,7 @@ const validateEmail = (req, res, next) => {
 };
 
 const validatepasswordreset = (req, res, next) => {
-  const result = passwordResetSchema.safeParse(req.body);
+  const result = passwordSchema.safeParse(req.body);
   if (!result.success) {
     throw new ApiError(
       400,
