@@ -36,3 +36,5 @@ router
   .route("/changeCurrentpassword")
   .post(validatecurrentpassword, changeCurrentPassword);
 router.route("/refreshtoken").get(refreshToken);
+
+export default router;
