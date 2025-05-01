@@ -1,13 +1,16 @@
 import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/api.error.js";
 import dotenv from "dotenv";
-import { db } from "../libs/db.lib.js";
+import User from "../../model/user.model.js";
+
 
 dotenv.config();
 
 const Isloggedin = async (req, res, next) => {
-  try {
+  try{
+
     const accessToken = req.cookies?.accessToken;
+
     if (!accessToken) {
       throw new ApiError(400, "accesstoken not found, user is not logged in");
     }
@@ -16,17 +19,14 @@ const Isloggedin = async (req, res, next) => {
       accessToken,
       process.env.ACCESS_TOKEN_SECRET,
     );
+
     if (!decoded) {
       throw new ApiError(400, "invalid token");
     }
 
-    const user = await db.user.findUnique({
-      where: {
-        id: decoded._id,
-      },
-    });
+    const user = await User.findById(decoded._id);
 
-    if (!user) {
+    if (!user){
       throw new ApiError(400, "user not found");
     }
 

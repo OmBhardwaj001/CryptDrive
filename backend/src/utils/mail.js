@@ -42,10 +42,13 @@ const sendMail = async (options) => {
     },
   });
 
+  let content;
+
+
   if (options.mailType === "verify") {
-    content = EmailVerificationMail(options.username, options.url);
+     content = EmailVerificationMail(options.username, options.url);
   } else if (options.mailType === "reset") {
-    content = PasswordResetMail(options.username, options.url);
+     content = PasswordResetMail(options.username, options.url);
   } else {
     throw new Error("Invalid mail type provided.");
   }
