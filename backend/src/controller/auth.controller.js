@@ -11,7 +11,8 @@ import {
   generateTemporaryToken,
 } from "../utils/generateToken.js";
 import sendMail from "../utils/mail.js";
-import { db } from "../libs/db.lib.js";
+import User from "../../model/user.model.js";
+
 
 
 dotenv.config();
@@ -20,43 +21,34 @@ dotenv.config();
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body; 
 
-  const existinguser = await db.user.findUnique({
-    where: {
-      email: email,
-    },
-  });
+  const existinguser = await User.findOne({email});
 
   if (existinguser) {
     throw new ApiError(400, "user already registered");
   }
 
-  const newUser = await db.user.create({
-    data: {
-      username: username,
-      email: email,
-      password: password,
-    },
+  const user = await User.create({
+    username,
+    email,
+    password
   });
 
-  if (!newUser) {
+ 
+
+  if (!user) {
     throw new ApiError(400, "user not created");
   }
 
-  const { unHashedToken, hashedToken, tokenExpiry } = generateTemporaryToken();
+  const { unHashedToken, hashedToken, tokenExpiry } = user.generateTemporaryToken();
 
-  await db.user.update({
-    where: {
-      id: newUser.id,
-    },
-    data: {
-      emailVerificationToken: hashedToken,
-      emailVerificationTokenExpiry: tokenExpiry,
-    },
-  });
+  user.emailVerificationToken = hashedToken;
+  user.emailVerificationExpiry = tokenExpiry;
+
+  await user.save();
 
   await sendMail({
-    username: newUser.username,
-    email: newUser.email,
+    username: user.username,
+    email: user.email,
     url: `${process.env.BASE_URL}/api/v1/auth/verify/${unHashedToken}`,
     subject: "Email verification",
     mailType: "verify",
@@ -64,7 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, `email sent successfully to ${newUser.email}`));
+    .json(new ApiResponse(200, `email sent successfully to ${user.email}`));
 });
 
 const verifyUser = asyncHandler(async (req, res) => {
@@ -73,36 +65,33 @@ const verifyUser = asyncHandler(async (req, res) => {
   if (!token) {
     throw new ApiError(400, "token not found");
   }
-
+  
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-  const user = await db.user.findFirst({
-    where: {
-      emailVerificationToken: hashedToken,
-      emailVerificationTokenExpiry: { gt: new Date() },
-    },
+  const user = await User.findOne({
+    emailVerificationToken: hashedToken,
+    emailVerificationExpiry: {$gt: Date.now()}
   });
-
+  
   if (!user) {
     throw new ApiError(400, "invalid token");
   }
 
-  await db.user.update({
-    where: {
-      id: user.id,
-    },
-    data: {
-      emailVerificationToken: null,
-      emailVerificationTokenExpiry: null,
-      isVerified: true,
-    },
-  });
+ 
+  user.isEmailVerified=true;
+  user.emailVerificationToken= undefined;
+  user.emailVerificationExpiry= undefined;
+
+  await user.save();
 
   res.status(200).json(new ApiResponse(200), "user verified");
+
 });
 
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+
+  
 
   const user = db.user.findUnique({
     where: {
