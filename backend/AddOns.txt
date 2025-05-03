@@ -1,0 +1,2 @@
+1. Captcha service
+2. OAuth service
