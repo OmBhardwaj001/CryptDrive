@@ -224,7 +224,7 @@ const resendEmailVerification = asyncHandler(async (req, res, next) => {
   });
 });
 
-const forgotPasswordReq= asyncHandler(async (req, res, next) => {
+const forgotPasswordReq = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
 
   const user = await User.findOne({ email }).select("-password -refreshToken");
