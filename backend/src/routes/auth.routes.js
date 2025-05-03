@@ -19,10 +19,11 @@ import {
   validatecurrentpassword,
 } from "../middlewares/validate.middleware.js";
 import { Isloggedin } from "../middlewares/auth.middleware.js";
+import upload from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
-router.route("/register").post(validateRegisterUser, registerUser);
+router.route("/register").post(validateRegisterUser, upload.single('avatar'), registerUser);
 router.route("/verify/:token").get(verifyUser);
 router.route("/login").post(validateLoginuser, loginUser);
 router.route("/logout").get(Isloggedin, logoutUser);
