@@ -44,6 +44,7 @@ const uploadfile = asyncHandler(async (req, res, next) => {
     description: description,
     filepath: path,
     filename: filename,
+    Mimetype: mimetype,
   });
 
   if (!file) {
@@ -58,4 +59,42 @@ const uploadfile = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, "file uploaded successfully"), file);
 });
 
-export { uploadfile };
+const getfile = asyncHandler(async (req, res, next) => {
+  const { filetype } = req.body;
+  const { _id } = req.user;
+
+  const files = await File.find(
+    {
+      createdBy: _id,
+      Mimetype: filetype,
+    },
+    { nameByuser: 1 },
+  );
+
+  if (files.length === 0) {
+    throw new ApiError(400, "files not found");
+  }
+
+  res.status(200).json(new ApiResponse(200, "your files are here:", files));
+});
+
+const filepreview = asyncHandler(async (req, res, next) => {
+  const { filename } = req.params;
+
+  const fileobj = await File.findOne(
+    {
+      nameByuser: filename,
+    },
+    { filepath: 1 },
+  );
+
+  const filepath = fileobj.filepath;
+
+  if (!filepath) {
+    throw new ApiError(400, "filepath not found");
+  }
+
+  res.sendFile(filepath);
+});
+
+export { uploadfile, getfile, filepreview };

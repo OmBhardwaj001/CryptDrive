@@ -9,6 +9,7 @@ import {
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/Asynchandler.js";
+import remove from "../utils/file.remove.js";
 
 async function generateAccessAndRefreshToken(userId) {
   try {
@@ -30,11 +31,17 @@ async function generateAccessAndRefreshToken(userId) {
 }
 
 const registerUser = asyncHandler(async (req, res, next) => {
+  console.log(req.file);
+  console.log(req.body);
+
   const { username, email, password, fullname } = req.body;
+
+  const path = req.file.path;
 
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
+    remove(path);
     return next(new ApiError(409, "Email already exists"));
   }
 

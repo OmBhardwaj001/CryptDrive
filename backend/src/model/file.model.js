@@ -25,6 +25,9 @@ const fileSchema = new Schema(
     filename: {
       type: String,
     },
+    Mimetype: {
+      type: String,
+    },
   },
   { timestamps: true },
 );
