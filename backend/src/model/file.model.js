@@ -28,6 +28,13 @@ const fileSchema = new Schema(
     Mimetype: {
       type: String,
     },
+    inFolder: {
+      type: Boolean,
+      default: false,
+    },
+    filepathInfolder: {
+      type: String,
+    },
   },
   { timestamps: true },
 );
