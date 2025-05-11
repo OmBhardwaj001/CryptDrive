@@ -3,6 +3,8 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./routes/auth.routes.js";
+import fileRoutes from "./routes/file.routes.js";
+import folderRoutes from "./routes/folder.routes.js";
 
 const app = express();
 
@@ -17,6 +19,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/file", fileRoutes);
+app.use("/api/v1/folder", folderRoutes);
 
 app.use((err, _req, res, _next) => {
   const statusCode = err.statusCode ?? 500;

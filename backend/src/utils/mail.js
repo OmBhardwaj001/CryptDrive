@@ -1,5 +1,11 @@
 import Mailgen from "mailgen";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
+
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendMail = async (options) => {
   const mailGenerator = new Mailgen({
@@ -13,15 +19,6 @@ const sendMail = async (options) => {
   var emailHtml = mailGenerator.generate(options.mailGenContent);
   var emailText = mailGenerator.generatePlaintext(options.mailGenContent);
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.MAILTRAP_HOST,
-    port: process.env.MAILTRAP_PORT,
-    auth: {
-      user: process.env.MAILTRAP_USER,
-      pass: process.env.MAILTRAP_PASSWORD,
-    },
-  });
-
   const mailOptions = {
     from: process.env.MAILTRAP_SENDEREMAIL,
     to: options.email,
@@ -31,7 +28,7 @@ const sendMail = async (options) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await resend.emails.send(mailOptions);
   } catch (error) {
     console.error(error);
   }

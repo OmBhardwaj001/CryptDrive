@@ -94,7 +94,44 @@ const filepreview = asyncHandler(async (req, res, next) => {
     throw new ApiError(400, "filepath not found");
   }
 
-  res.sendFile(filepath);
+  // res.sendFile(filepath);
+  res.status(200).json(new ApiResponse(200, "file preview", filepath));
 });
 
-export { uploadfile, getfile, filepreview };
+const removefilefromfolder = asyncHandler(async (req, res) => {
+  const { namebyuser } = req.params;
+
+  const file = await File.findOneAndUpdate(
+    { nameByuser: namebyuser },
+    { $set: { inFolder: false, filepathInfolder: null } },
+  );
+
+  if (!file) {
+    throw new ApiError(400, "file not found");
+  }
+
+  res.status(200).json(new ApiResponse(200, "file removed from folder"));
+});
+
+const download = asyncHandler(async (req, res) => {
+  const { namebyuser } = req.params;
+
+  const file = await File.findOne({
+    nameByuser: namebyuser,
+  });
+
+  if (!file) {
+    throw new ApiError(400, "file not found");
+  }
+
+  const filepath = file.filepath;
+
+  res.download(filepath, (err) => {
+    if (err) {
+      console.log("error sending file:", err);
+      throw new ApiError(400, "file cannot be downloaded");
+    }
+  });
+});
+
+export { uploadfile, getfile, filepreview, removefilefromfolder, download };

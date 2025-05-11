@@ -28,7 +28,7 @@ router
   .route("/register")
   .post(authLimitter, upload.single("avatar"), validateRegisterUser, registerUser);
 
-router.route("/verify/:token").get(authLimitter, verifyUser);
+router.route("/verify/:token").get(verifyUser);
 
 router.route("/login").post(authLimitter, validateLoginuser, loginUser);
 

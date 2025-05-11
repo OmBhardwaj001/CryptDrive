@@ -31,12 +31,7 @@ async function generateAccessAndRefreshToken(userId) {
 }
 
 const registerUser = asyncHandler(async (req, res, next) => {
-  console.log(req.file);
-  console.log(req.body);
-
   const { username, email, password, fullname } = req.body;
-
-  const path = req.file.path;
 
   const existingUser = await User.findOne({ email });
 
@@ -73,7 +68,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
     subject: "Email Verification",
     mailGenContent: emailVerificationMailGenContent(
       user.username,
-      `${process.env.BASE_URL}/api/v1/users/verify/${unHashedToken}`,
+      `${process.env.BASE_URL}/api/v1/auth/verify/${unHashedToken}`,
     ),
   });
 
@@ -82,32 +77,36 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
 const verifyUser = asyncHandler(async (req, res, next) => {
   const { token } = req.params;
+  console.log("1");
 
   if (!token) {
     return next(new ApiError(401, "Invalid Token"));
   }
+  console.log("1");
 
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
+  console.log("1");
   const user = await User.findOne({
     emailVerificationToken: hashedToken,
     emailVerificationExpiry: {
       $gt: Date.now(),
     },
   });
-
+  console.log("1");
   if (user.isEmailVerified) {
     return res.status(200).json(new ApiResponse(200, "User already verified"));
   }
+  console.log("1");
 
   if (!user) {
     return next(new ApiError(401, "Invalid or expired verification token"));
   }
+  console.log("1");
 
   user.isEmailVerified = true;
-
+  console.log("1");
   await user.save();
-
+  console.log("1");
   res.status(200).json(new ApiResponse(200, "User verified successfully"));
 });
 
