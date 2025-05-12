@@ -7,7 +7,9 @@ dotenv.config();
 
 const Isloggedin = async (req, res, next) => {
   try {
+    
     const accessToken = req.cookies?.accessToken;
+     console.log(accessToken);
 
     if (!accessToken) {
       throw new ApiError(401, "Unauthorized access");

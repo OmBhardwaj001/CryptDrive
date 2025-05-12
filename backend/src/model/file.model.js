@@ -35,6 +35,18 @@ const fileSchema = new Schema(
     filepathInfolder: {
       type: String,
     },
+    allowtoview: {
+      type: Boolean,
+      default: false,
+    },
+    inlocked: {
+      type: Boolean,
+      default: false,
+    },
+    lockedfolderid: {
+      type: Schema.Types.ObjectId,
+      ref: "Lockedfolder",
+    },
   },
   { timestamps: true },
 );

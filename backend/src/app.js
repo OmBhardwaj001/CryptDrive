@@ -5,8 +5,13 @@ import helmet from "helmet";
 import authRoutes from "./routes/auth.routes.js";
 import fileRoutes from "./routes/file.routes.js";
 import folderRoutes from "./routes/folder.routes.js";
+import LockedfolderRoutes from "./routes/locked.folder.routes.js";
+import session from "express-session";
+import dotenv from "dotenv";
 
 const app = express();
+
+dotenv.config();
 
 app.use(cookieParser());
 app.use(
@@ -18,9 +23,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
 
+app.use(
+  session({
+    secret: process.env.LOCKED_FOLDER_SECRET_KEY,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,
+      maxAge: 5 * 60 * 1000,
+    },
+  }),
+);
+
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/file", fileRoutes);
 app.use("/api/v1/folder", folderRoutes);
+app.use("/api/v1/locked", LockedfolderRoutes);
 
 app.use((err, _req, res, _next) => {
   const statusCode = err.statusCode ?? 500;

@@ -4,6 +4,7 @@ import {
   emailSchema,
   changecurrentpasswordSchema,
   passwordSchema,
+  lockedfolderSchema,
 } from "../validator/userschema.validator.js";
 import { ApiError } from "../utils/api.error.js";
 
@@ -69,10 +70,23 @@ const validatecurrentpassword = (req, res, next) => {
   next();
 };
 
+const validatelockedfolder = (req, res, next) => {
+  const result = lockedfolderSchema.safeParse(req.body);
+  if (!result.success) {
+    throw new ApiError(
+      400,
+      "validation error",
+      result.error.issues[0]?.message,
+    );
+  }
+  next();
+};
+
 export {
   validateRegisterUser,
   validateLoginuser,
   validateEmail,
   validatepasswordreset,
   validatecurrentpassword,
+  validatelockedfolder,
 };
