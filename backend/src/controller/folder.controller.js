@@ -3,7 +3,6 @@ import File from "../model/file.model.js";
 import { ApiError } from "../utils/api.error.js";
 import { ApiResponse } from "../utils/api.response.js";
 import { asyncHandler } from "../utils/Asynchandler.js";
-import { join } from "path";
 
 const createFolder = asyncHandler(async (req, res) => {
   const { nameByuser } = req.body;
@@ -48,19 +47,20 @@ const addfileTofolder = asyncHandler(async (req, res) => {
   const { nameByuser } = req.body;
   const { foldername } = req.params;
 
-  const path = "C:/Users/OM BHARDWAJ/Desktop/cryptdrive/backend/public/images/"; // forward slasesh or double slash fill work not backward
-
-  const folderpath = join(path, foldername); // folderpath -> images/foldername
-  const filepath = join(path, foldername, nameByuser); // filename -> images/foldername/filename
-
-  await Folder.updateOne(
+  await Folder.updateMany(
     { nameByuser: foldername },
-    { $set: { folderPath: folderpath } },
+    { $set: { filesinit: [nameByuser] } },
   );
 
+  const file = await File.findOne({ nameByuser: nameByuser });
+
+  if (file.inFolder) {
+    throw new ApiError(400, "file is already in folder");
+  }
+
   await File.updateMany(
-    { filename: nameByuser },
-    { $set: { filepathInfolder: filepath, inFolder: true } },
+    { nameByuser: nameByuser },
+    { $set: { inFolder: true } },
   );
 
   res.status(200).json(new ApiResponse(200, "file added to folder"));

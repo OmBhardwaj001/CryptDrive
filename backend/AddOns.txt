@@ -1,5 +1,4 @@
 1. Captcha service
 2. OAuth service
 
-// restrict single file to be added in two different LOCKED FOLDER
-// OTP serivce for locked folder ( currently working with simple password without hashing )
+// on deleting any folder the file's in folder must turn to false and folder id to null

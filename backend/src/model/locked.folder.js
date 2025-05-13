@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import bcrypt from "bcryptjs";
 
 const lockedfolderSchema = new Schema(
   {
@@ -11,15 +12,21 @@ const lockedfolderSchema = new Schema(
       ref: "User",
       required: true,
     },
-    folderpath: {
-      type: String,
-    },
     password: {
       type: String,
+    },
+    filesinit: {
+      type: Array,
     },
   },
   { timestamps: true },
 );
+
+lockedfolderSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
 
 const Lockedfolder = mongoose.model("Lockedfolder", lockedfolderSchema);
 

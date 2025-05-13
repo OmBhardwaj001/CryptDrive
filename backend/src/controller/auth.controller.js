@@ -9,7 +9,8 @@ import {
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/Asynchandler.js";
-import remove from "../utils/file.remove.js";
+import encryptfile from "../utils/encryption.js";
+import uploadEncryptedBuffer from "../service/cloudinary.js";
 
 async function generateAccessAndRefreshToken(userId) {
   try {
@@ -33,10 +34,20 @@ async function generateAccessAndRefreshToken(userId) {
 const registerUser = asyncHandler(async (req, res, next) => {
   const { username, email, password, fullname } = req.body;
 
+  const originalfile = req.file.buffer;
+
+  const originalEncrypted = encryptfile(originalfile);
+
+  const result = await uploadEncryptedBuffer(
+    originalEncrypted,
+    `${req.file.originalname}${username}${Date.now()}`,
+  );
+
+  const resultURL = result.secure_url; // path of file from cloud
+
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
-    remove(path);
     return next(new ApiError(409, "Email already exists"));
   }
 
@@ -46,8 +57,8 @@ const registerUser = asyncHandler(async (req, res, next) => {
     password,
     fullname,
     avatar: {
-      url: req.file?.path,
-      filename: req.file?.filename,
+      url: resultURL,
+      encryptedData: originalEncrypted,
     },
   });
 

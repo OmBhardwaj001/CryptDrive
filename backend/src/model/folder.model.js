@@ -11,8 +11,8 @@ const folderSchema = new Schema(
       ref: "User",
       required: true,
     },
-    folderPath: {
-      type: String,
+    filesinit: {
+      type: Array,
     },
   },
   { timestamps: true },

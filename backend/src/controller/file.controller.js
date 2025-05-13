@@ -1,8 +1,11 @@
 import File from "../model/file.model.js";
 import { asyncHandler } from "../utils/Asynchandler.js";
-import remove from "../utils/file.remove.js";
 import { ApiError } from "../utils/api.error.js";
 import { ApiResponse } from "../utils/api.response.js";
+import encryptfile from "../utils/encryption.js";
+import uploadEncryptedBuffer from "../service/cloudinary.js";
+import decryptfile from "../utils/decryption.js";
+import fs from "fs";
 
 const uploadfile = asyncHandler(async (req, res, next) => {
   if (!req.file) {
@@ -10,7 +13,7 @@ const uploadfile = asyncHandler(async (req, res, next) => {
   }
 
   const { nameByuser, description } = req.body;
-  const { originalname, size, path, mimetype, filename } = req.file;
+  const { originalname, size, mimetype } = req.file;
 
   const maxFileSize = 5 * 1000 * 1000;
   const allowedMIMEtypes = [
@@ -24,35 +27,35 @@ const uploadfile = asyncHandler(async (req, res, next) => {
   ];
 
   if (!allowedMIMEtypes.includes(mimetype)) {
-    remove(path);
     throw new ApiError(400, "mimetype not matched");
   }
 
   if (size > maxFileSize) {
-    remove(path);
     throw new ApiError(400, "file size exceeds max size allowed");
   }
 
-  if (nameByuser) {
-    req.file.filename = nameByuser;
-  }
+  const originalfile = req.file.buffer;
+  const originalEncrypted = encryptfile(originalfile);
+
+  const result = await uploadEncryptedBuffer(
+    originalEncrypted,
+    `${req.file.originalname}${Date.now()}`,
+  );
+  console.log("file uploaded successfully to cloud");
+
+  const resultURL = result.secure_url;
 
   const file = await File.create({
     nameByuser: nameByuser || originalname, // if user has given name then use that for originalname for file and filename with datetime would be different
     size,
     createdBy: req.user._id,
     description: description,
-    filepath: path,
-    filename: filename,
+    filepath: resultURL,
     Mimetype: mimetype,
+    encryptedData: originalEncrypted,
   });
 
-  if (!file) {
-    remove(path);
-    throw new ApiError(400, "file not uploaded");
-  }
-
-  await file.save();
+  // await file.save();
 
   res
     .status(200)
@@ -85,17 +88,20 @@ const filepreview = asyncHandler(async (req, res, next) => {
     {
       nameByuser: filename,
     },
-    { filepath: 1 },
+    { filepath: 1, encryptedData: 1 },
   );
 
   const filepath = fileobj.filepath;
+  const encryptedData = fileobj.encryptedData;
 
-  if (!filepath) {
-    throw new ApiError(400, "filepath not found");
-  }
+  const decryptedData = decryptfile(encryptedData);
+  fs.writeFileSync("decrypted.pdf", decryptedData);
 
-  // res.sendFile(filepath);
-  res.status(200).json(new ApiResponse(200, "file preview", filepath));
+  //  res.setHeader('Content-Type', 'application/pdf'); // or 'image/png', etc.
+  //  res.setHeader('Content-Disposition', 'inline'); // 'inline' = show in browser, not download
+  //  res.send(decryptedData);
+
+  res.status(200).json(new ApiResponse(200, "file preview", decryptedData));
 });
 
 const removefilefromfolder = asyncHandler(async (req, res) => {
@@ -124,14 +130,13 @@ const download = asyncHandler(async (req, res) => {
     throw new ApiError(400, "file not found");
   }
 
-  const filepath = file.filepath;
+  const encryptedData = file.encryptedData;
 
-  res.download(filepath, (err) => {
-    if (err) {
-      console.log("error sending file:", err);
-      throw new ApiError(400, "file cannot be downloaded");
-    }
-  });
+  const decryptedData = decryptfile(encryptedData);
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "here is your file", decryptedData));
 });
 
 export { uploadfile, getfile, filepreview, removefilefromfolder, download };

@@ -4,8 +4,8 @@ import File from "../model/file.model.js";
 import { asyncHandler } from "../utils/Asynchandler.js";
 import { ApiError } from "../utils/api.error.js";
 import { ApiResponse } from "../utils/api.response.js";
-import { join } from "path";
 import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 
@@ -56,27 +56,27 @@ const addfilesTofolder = asyncHandler(async (req, res) => {
   const { nameByuser } = req.body;
   const { foldername } = req.params;
 
-  const path = "C:/Users/OM BHARDWAJ/Desktop/cryptdrive/backend/public/images/"; // forward slasesh or double slash will work not backward
-
   const lockedfolder = await Lockedfolder.findOne({ nameByuser: foldername });
 
   if (!lockedfolder) {
     throw new ApiError(404, "Target folder not found");
   }
 
-  const folderpath = join(path, foldername); // folderpath -> images/foldername
-  const filepath = join(path, foldername, nameByuser); // filename -> images/foldername/filename
-
   await Lockedfolder.updateOne(
     { nameByuser: foldername },
-    { $set: { folderPath: folderpath } },
+    { $set: { filesinit: [nameByuser] } },
   );
 
+  const file = await File.findOne({ nameByuser: nameByuser });
+
+  if (file.inFolder) {
+    throw new ApiError(400, "file is already in folder");
+  }
+
   await File.updateMany(
-    { filename: nameByuser },
+    { nameByuser: nameByuser },
     {
       $set: {
-        filepathInfolder: filepath,
         inFolder: true,
         inlocked: true,
         lockedfolderid: lockedfolder._id,
@@ -99,8 +99,10 @@ const unlockfolder = asyncHandler(async (req, res) => {
     { $set: { islocked: false } },
   );
 
-  if (password != lockedfolder.password) {
-    throw new ApiError(400, "password incorrect");
+  const passwordMatch = await bcrypt.compare(password, lockedfolder.password);
+
+  if (!passwordMatch) {
+    return next(new ApiError(401, "Incorrect email or password"));
   }
 
   await File.updateMany(
@@ -127,10 +129,15 @@ const viewfiles = asyncHandler(async (req, res) => {
     throw new ApiError(400, "session expired");
   }
 
-  const files = await File.find({
-    lockedfolderid: folderid,
-    allowtoview: true,
-  });
+  const files = await File.find(
+    {
+      lockedfolderid: folderid,
+      allowtoview: true,
+    },
+    {
+      encryptedData: 0, // Exclude this field from result
+    },
+  );
 
   res.status(200).json(new ApiResponse(200, "Files retrieved", files));
 });
