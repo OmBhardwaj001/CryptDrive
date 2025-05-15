@@ -276,7 +276,7 @@ const forgotPasswordReq = asyncHandler(async (req, res, next) => {
     subject: "Reset Password",
     mailGenContent: forgotPasswordMailGenContent(
       user.username,
-      `${process.env.BASE_URL}/api/v1/users/reset-password/${unHashedToken}`,
+      `${process.env.BASE_URL}/api/v1/auth/reset-password/${unHashedToken}`,
     ),
   });
 

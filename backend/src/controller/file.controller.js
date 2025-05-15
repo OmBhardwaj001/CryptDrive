@@ -5,7 +5,8 @@ import { ApiResponse } from "../utils/api.response.js";
 import encryptfile from "../utils/encryption.js";
 import uploadEncryptedBuffer from "../service/cloudinary.js";
 import decryptfile from "../utils/decryption.js";
-import fs from "fs";
+import Folder from "../model/folder.model.js";
+import bcrypt from "bcryptjs";
 
 const uploadfile = asyncHandler(async (req, res, next) => {
   if (!req.file) {
@@ -91,11 +92,15 @@ const filepreview = asyncHandler(async (req, res, next) => {
     { filepath: 1, encryptedData: 1 },
   );
 
+  if (!fileobj.allowtoview) {
+    throw new ApiError(400, "file is inside a locked folder");
+  }
+
   const filepath = fileobj.filepath;
   const encryptedData = fileobj.encryptedData;
 
   const decryptedData = decryptfile(encryptedData);
-  fs.writeFileSync("decrypted.pdf", decryptedData);
+  // fs.writeFileSync("decrypted.pdf", decryptedData);
 
   //  res.setHeader('Content-Type', 'application/pdf'); // or 'image/png', etc.
   //  res.setHeader('Content-Disposition', 'inline'); // 'inline' = show in browser, not download
@@ -106,10 +111,44 @@ const filepreview = asyncHandler(async (req, res, next) => {
 
 const removefilefromfolder = asyncHandler(async (req, res) => {
   const { namebyuser } = req.params;
+  const { password } = req.body;
 
-  const file = await File.findOneAndUpdate(
+  const file = await File.findOne({ nameByuser: namebyuser });
+
+  if (!file) {
+    throw new ApiError(400, "file not found");
+  }
+
+  const folderid = file.folderid;
+
+  const folder = await Folder.findOne({ _id: folderid });
+
+  if (!folder) {
+    throw new ApiError(400, "folder not found");
+  }
+
+  if (folder.isLocked) {
+    if (!password) {
+      throw new ApiError(400, "password is required for locked folders");
+    }
+  }
+
+  const isMatch = await bcrypt.compare(password, folder.password);
+  if (!isMatch) {
+    throw new ApiError(400, "password incorrect");
+  }
+
+  await Folder.updateOne(
+    { _id: folderid },
+    {
+      $set: { folderid: null },
+      $pull: { filesinit: file._id },
+    },
+  );
+
+  await File.updateOne(
     { nameByuser: namebyuser },
-    { $set: { inFolder: false, filepathInfolder: null } },
+    { $set: { inFolder: false, filepathInfolder: null, folderid: null } },
   );
 
   if (!file) {
@@ -128,6 +167,10 @@ const download = asyncHandler(async (req, res) => {
 
   if (!file) {
     throw new ApiError(400, "file not found");
+  }
+
+  if (!file.allowtoview) {
+    throw new ApiError(400, "file is inside a locked folder");
   }
 
   const encryptedData = file.encryptedData;

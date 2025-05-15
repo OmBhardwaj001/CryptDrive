@@ -32,6 +32,9 @@ const fileSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    folderid: {
+      type: String,
+    },
     allowtoview: {
       type: Boolean,
       default: false,
@@ -39,10 +42,6 @@ const fileSchema = new Schema(
     inlocked: {
       type: Boolean,
       default: false,
-    },
-    lockedfolderid: {
-      type: Schema.Types.ObjectId,
-      ref: "Lockedfolder",
     },
     encryptedData: {
       type: Buffer,

@@ -5,7 +5,6 @@ import helmet from "helmet";
 import authRoutes from "./routes/auth.routes.js";
 import fileRoutes from "./routes/file.routes.js";
 import folderRoutes from "./routes/folder.routes.js";
-import LockedfolderRoutes from "./routes/locked.folder.routes.js";
 import session from "express-session";
 import dotenv from "dotenv";
 
@@ -38,7 +37,6 @@ app.use(
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/file", fileRoutes);
 app.use("/api/v1/folder", folderRoutes);
-app.use("/api/v1/locked", LockedfolderRoutes);
 
 app.use((err, _req, res, _next) => {
   const statusCode = err.statusCode ?? 500;
