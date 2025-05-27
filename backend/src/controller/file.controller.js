@@ -7,6 +7,7 @@ import uploadEncryptedBuffer from "../service/cloudinary.js";
 import decryptfile from "../utils/decryption.js";
 import Folder from "../model/folder.model.js";
 import bcrypt from "bcryptjs";
+import fs from 'fs'
 
 const uploadfile = asyncHandler(async (req, res, next) => {
   if (!req.file) {
@@ -92,7 +93,7 @@ const filepreview = asyncHandler(async (req, res, next) => {
     { filepath: 1, encryptedData: 1 },
   );
 
-  if (!fileobj.allowtoview) {
+  if (fileobj.allowtoview) {
     throw new ApiError(400, "file is inside a locked folder");
   }
 
@@ -169,7 +170,7 @@ const download = asyncHandler(async (req, res) => {
     throw new ApiError(400, "file not found");
   }
 
-  if (!file.allowtoview) {
+  if (file.allowtoview) {
     throw new ApiError(400, "file is inside a locked folder");
   }
 
