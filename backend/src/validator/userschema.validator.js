@@ -39,6 +39,16 @@ const userSchema = z
       .trim()
       .transform((username) => username.toLocaleLowerCase()),
 
+    fullname: z
+      .string({
+        required_error: "fullname is required",
+        invalid_type_error: "fullname should be string",
+      })
+      .min(3, { message: "Must be 3 or more characters long" })
+      .max(30, { message: "Username cannot exceed 30 characters" })
+      .trim()
+      .transform((fullname) => fullname.toLocaleLowerCase()),
+
     email: z
       .string({
         required_error: "email is required",

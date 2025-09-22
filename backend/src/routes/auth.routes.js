@@ -26,7 +26,7 @@ const router = Router();
 
 router
   .route("/register")
-  .post(authLimitter, upload.single("avatar"), validateRegisterUser, registerUser);
+  .post(authLimitter, upload.single("avatarFile"), validateRegisterUser, registerUser);
 
 router.route("/verify/:token").get(verifyUser);
 
