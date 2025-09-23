@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, Link, Navigate } from "react-router-dom";
+import { useNavigate, Link, Navigate, useSearchParams } from "react-router-dom";
 import {
   registerFailure,
   registerStart,
@@ -10,13 +10,19 @@ import {
 } from "../../feature/auth/authSlice";
 
 function Register() {
+  const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
+  const Navigate = useNavigate();
 
   const registrationData = useSelector((state) => state.auth.registrationData);
   const { isLoading, error } = useSelector((state) => state.auth);
 
   const [showPassword, setShowPassword] = useState(false);
   const [previewAvatar, setPreviewAvatar] = useState(null);
+  const [registeredEmail,setRegisteredEmail] = useState(null);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+  const verifiedEmail = searchParams.get('email');
 
   const handleInputChange = (field, value) => {
     dispatch(updateRegistrationField({ field, value }));
@@ -84,9 +90,10 @@ function Register() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (data.statusCode === 201) {
+        setShowSuccessPopup(true)
+        setRegisteredEmail(registrationData.email)
         dispatch(registerSuccess(data));
-        Navigate("/dashboard");
       } else {
         dispatch(registerFailure(data.message || "Registration failure"));
       }
@@ -95,8 +102,75 @@ function Register() {
     }
   };
 
+  const handleOpenEmail=()=>{
+    window.open('https://mail.google.com', '_blank');
+  }
+
+  const handleClosePopup=()=>{
+    setShowSuccessPopup(false)
+    Navigate('/login')
+  }
+
+  useEffect(()=>{
+    if(searchParams.get('verified') === "true"){
+      handleClosePopup()
+    }
+  },[searchParams])
+
  return (
-   <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+   <div  className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+
+    {/* Success Popup Modal */}
+      {showSuccessPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <div className="text-center">
+              {/* Success Icon */}
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              
+              <h3 className="mt-3 text-lg font-medium text-gray-900">
+                Please register your email
+              </h3>
+              
+              <div className="mt-2">
+                <p className="text-sm text-gray-500">
+                  We've sent a verification link to:
+                </p>
+                <p className="text-sm font-medium text-gray-700 mt-1">
+                  {registeredEmail}
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Please check your email and click the verification link to activate your account.
+                </p>
+              </div>
+
+              <div className="mt-4 flex flex-col space-y-3">
+                <button
+                  onClick={handleOpenEmail}
+                  className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                  Open Email
+                </button>
+                
+                <button
+                  onClick={handleClosePopup}
+                  className="w-full inline-flex justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Continue to Login
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
      <div className="sm:mx-auto sm:w-full sm:max-w-md">
        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
          Create your account
