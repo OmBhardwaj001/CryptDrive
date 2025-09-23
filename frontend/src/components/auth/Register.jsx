@@ -7,6 +7,7 @@ import {
   registerSuccess,
   setAvatar,
   updateRegistrationField,
+  updateEmailVerification
 } from "../../feature/auth/authSlice";
 
 function Register() {
@@ -114,6 +115,7 @@ function Register() {
   useEffect(()=>{
     if(searchParams.get('verified') === "true"){
       handleClosePopup()
+      dispatch(isEmailVerified());
     }
   },[searchParams])
 
