@@ -129,21 +129,23 @@ const loginUser = asyncHandler(async (req, res, next) => {
     user._id,
   );
 
-  const cookieOptions = {
-    httpOnly: true,
-    secure: true,
-  };
-
   res
     .status(200)
-    .cookie("accessToken", accessToken, cookieOptions)
-    .cookie("refreshToken", refreshToken, cookieOptions)
-    .json(
-      new ApiResponse(200, "User logged in successfully", {
-        accessToken,
-        refreshToken,
-      }),
-    );
+    .cookie("accessToken", accessToken, {
+      httpOnly:true,
+      secure:process.env.NODE_ENV === 'production',
+      sameSite:"Strict",
+      maxAge:process.env.ACCESS_COOKIE_EXPIRY,
+      path:'/'
+    })
+    .cookie("refreshToken", refreshToken, {
+      httpOnly:true,
+      secure:process.env.NODE_ENV === 'production',
+      sameSite:"strict",
+      maxAge:process.env.REFRESH_COOKIE_EXPIRY,
+      path:'/refresh'
+    })
+    .json(new ApiResponse(200, "User logged in successfully",{user}));
 });
 
 const logoutUser = asyncHandler(async (req, res, next) => {
