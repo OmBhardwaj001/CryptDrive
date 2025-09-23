@@ -7,6 +7,7 @@ const initialState={
     isAuthenticated:false,
     isLoading:false,
     error:null,
+    isEmailVerified:false,
     registrationData:{
         username:"",
         email:"",
@@ -43,10 +44,26 @@ export const authSlice = createSlice({
         updateRegistrationField:(state,action)=>{
             const {field, value} = action.payload
             state.registrationData[field] = value
+        },
+        updateEmailVerification:(state)=>{
+            state.isEmailVerified = true
+        },
+        loginStart:(state)=>{
+            state.isLoading = true
+            state.error = false 
+        },
+        loginSuccess:(state)=>{
+            state.error = false
+            state.isLoading = false
+            state.isAuthenticated=true
+        },
+        loginFailure:(state,action)=>{
+            state.error = action.payload
+            state.isLoading = false
         }
 
     }
 })
 
-export const {registerStart,registerSuccess,registerFailure,setAvatar,updateRegistrationField} = authSlice.actions
+export const {registerStart,registerSuccess,registerFailure,setAvatar,updateRegistrationField,updateEmailVerification,loginStart,loginSuccess,loginFailure} = authSlice.actions
 export default authSlice.reducer
