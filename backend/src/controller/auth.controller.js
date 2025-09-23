@@ -88,37 +88,26 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
 const verifyUser = asyncHandler(async (req, res, next) => {
   const { token } = req.params;
-  console.log("1");
-
   if (!token) {
     return next(new ApiError(401, "Invalid Token"));
   }
-  console.log("1");
-
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-  console.log("1");
   const user = await User.findOne({
     emailVerificationToken: hashedToken,
     emailVerificationExpiry: {
       $gt: Date.now(),
     },
   });
-  console.log("1");
   if (user.isEmailVerified) {
     return res.status(200).json(new ApiResponse(200, "User already verified"));
   }
-  console.log("1");
-
   if (!user) {
     return next(new ApiError(401, "Invalid or expired verification token"));
   }
-  console.log("1");
-
   user.isEmailVerified = true;
   console.log("1");
   await user.save();
-  console.log("1");
-  res.status(200).json(new ApiResponse(200, "User verified successfully"));
+  res.redirect(`http://localhost:5173/?verified=true&email=${user.email}`);
 });
 
 const loginUser = asyncHandler(async (req, res, next) => {
